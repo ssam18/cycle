@@ -1,129 +1,58 @@
-# How to Use This Template
-
-To create a new Beman library, first click the "Use this template" dropdown in the
-top-right and select "Create a new repository":
-
-<table><tr><td>
-  <img src="images/use-this-template.png" width="400px">
-</td></tr></table>
-
-This will create a new repository that's an exact copy of exemplar. The next step is to
-customize it for your use case.
-
-To do so, execute the bash script `stamp.sh`. This script will prompt for parameters like
-the new library's name, paper number, and description. Then it will replace your exemplar
-copy with a stamped-out template containing these parameters and create a corresponding
-git commit and branch:
-
-```
-$ ./stamp.sh
-  [1/7] project_name (my_project_name): example_library
-  [2/7] maintainer (your_github_username): your_username
-  [3/7] minimum_cpp_build_version (20):
-  [4/7] paper (PnnnnRr): P9999R9
-  [5/7] description (Short project description.):
-  [6/7] Select library_type
-    1 - interface
-    2 - static
-    Choose from [1/2] (1):
-  [7/7] Select unit_test_library
-    1 - gtest
-    2 - catch2
-    Choose from [1/2] (1):
-Switched to a new branch 'stamp'
-Successfully stamped out exemplar template to the new branch 'stamp'.
-Try 'git push origin stamp' to push the branch upstream,
-then create a pull request.
-```
-
-From there, you can simply fill in all the remaining parts of the repository that are
-labeled 'todo'.
-
-What follow is an example of a Beman library README.
-
-# beman.exemplar: A Beman Library Exemplar
+# beman.cycle: Range adaptor that endlessly repeats a forward range (views::cycle, P3806R0).
 
 <!--
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 -->
 
 <!-- markdownlint-disable-next-line line-length -->
-![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg) ![Continuous Integration Tests](https://github.com/bemanproject/exemplar/actions/workflows/ci_tests.yml/badge.svg) ![Lint Check (pre-commit)](https://github.com/bemanproject/exemplar/actions/workflows/pre-commit-check.yml/badge.svg) [![Coverage](https://coveralls.io/repos/github/bemanproject/exemplar/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/exemplar?branch=main) ![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
+![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg) ![Continuous Integration Tests](https://github.com/bemanproject/cycle/actions/workflows/ci_tests.yml/badge.svg) ![Lint Check (pre-commit)](https://github.com/bemanproject/cycle/actions/workflows/pre-commit-check.yml/badge.svg) [![Coverage](https://coveralls.io/repos/github/bemanproject/cycle/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/cycle?branch=main) ![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
 
-`beman.exemplar` is a minimal C++ library conforming to [The Beman Standard](https://github.com/bemanproject/beman/blob/main/docs/beman_standard.md).
+`beman.cycle` is a minimal C++ library conforming to [The Beman Standard](https://github.com/bemanproject/beman/blob/main/docs/beman_standard.md).
 This can be used as a template for those intending to write Beman libraries.
 It may also find use as a minimal and modern  C++ project structure.
 
-**Implements**: `std::identity` proposed in [Standard Library Concepts (P0898R3)](https://wg21.link/P0898R3).
+**Implements**: `std::ranges::views::cycle` proposed in [views::cycle (P3806R0)](https://wg21.link/P3806R0).
 
 **Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#under-development-and-not-yet-ready-for-production-use)
 
 ## License
 
-`beman.exemplar` is licensed under the Apache License v2.0 with LLVM Exceptions.
+`beman.cycle` is licensed under the Apache License v2.0 with LLVM Exceptions.
 
 ## Usage
 
-`std::identity` is a function object type whose `operator()` returns its argument unchanged.
-`std::identity` serves as the default projection in constrained algorithms.
-Its direct usage is usually not needed.
+`beman::cycle::views::cycle` is a range adaptor that takes any non-empty
+forward range and yields an infinite view that endlessly repeats the source
+range's elements. Applied to an empty range, it yields an empty view.
 
-### Usage: default projection in constrained algorithms
+```c++
+#include <beman/cycle/cycle.hpp>
 
-The following code snippet illustrates how we can achieve a default projection using `beman::exemplar::identity`:
+#include <ranges>
+#include <vector>
 
-```cpp
-#include <beman/exemplar/exemplar.hpp>
-
-namespace exe = beman::exemplar;
-
-// Class with a pair of values.
-struct Pair
-{
-    int n;
-    std::string s;
-
-    // Output the pair in the form {n, s}.
-    // Used by the range-printer if no custom projection is provided (default: identity projection).
-    friend std::ostream &operator<<(std::ostream &os, const Pair &p)
-    {
-        return os << "Pair" << '{' << p.n << ", " << p.s << '}';
+int main() {
+    std::vector v = {1, 2, 3};
+    for (int x : v | beman::cycle::views::cycle | std::views::take(7)) {
+        // 1 2 3 1 2 3 1
     }
-};
-
-// A range-printer that can print projected (modified) elements of a range.
-// All the elements of the range are printed in the form {element1, element2, ...}.
-// e.g., pairs with identity: Pair{1, one}, Pair{2, two}, Pair{3, three}
-// e.g., pairs with custom projection: {1:one, 2:two, 3:three}
-template <std::ranges::input_range R,
-          typename Projection>
-void print(const std::string_view rem, R &&range, Projection projection = exe::identity>)
-{
-    std::cout << rem << '{';
-    std::ranges::for_each(
-        range,
-        [O = 0](const auto &o) mutable
-        { std::cout << (O++ ? ", " : "") << o; },
-        projection);
-    std::cout << "}\n";
-};
-
-int main()
-{
-    // A vector of pairs to print.
-    const std::vector<Pair> pairs = {
-        {1, "one"},
-        {2, "two"},
-        {3, "three"},
-    };
-
-    // Print the pairs using the default projection.
-    print("\tpairs with beman: ", pairs);
-
-    return 0;
 }
-
 ```
+
+Iterator capabilities track the underlying range:
+
+| Base range                                    | `cycle_view` iterator        |
+|-----------------------------------------------|------------------------------|
+| `forward_range`                               | forward                      |
+| `bidirectional_range` and `common_range`      | bidirectional                |
+| `random_access_range` and `sized_range`       | random access (with `[i]`)   |
+
+Notes consistent with P3806R0:
+
+* `views::cycle(empty_range)` is well-formed and yields an empty view.
+* `end()` returns `std::default_sentinel`; on a non-empty base the view is infinite.
+* `cycle_view` is **not** a borrowed range.
+* `iter_swap` is intentionally not provided (two iterators can alias the same base position).
 
 Full runnable examples can be found in [`examples/`](examples/).
 
@@ -133,34 +62,35 @@ Full runnable examples can be found in [`examples/`](examples/).
 
 This project requires at least the following to build:
 
-* A C++ compiler that conforms to the C++17 standard or greater
+* A C++ compiler that conforms to the C++20 standard or greater
+  (the implementation relies on concepts and the C++20 ranges library)
 * CMake 3.30 or later
 * (Test Only) GoogleTest
 
-You can disable building tests by setting CMake option `BEMAN_EXEMPLAR_BUILD_TESTS` to
+You can disable building tests by setting CMake option `BEMAN_CYCLE_BUILD_TESTS` to
 `OFF` when configuring the project.
 
 ### Supported Platforms
 
 | Compiler   | Version | C++ Standards | Standard Library  |
 |------------|---------|---------------|-------------------|
-| GCC        | 15-13   | C++26-C++17   | libstdc++         |
-| GCC        | 12-11   | C++23-C++17   | libstdc++         |
-| Clang      | 22-19   | C++26-C++17   | libstdc++, libc++ |
-| Clang      | 18-17   | C++26-C++17   | libc++            |
-| Clang      | 18-17   | C++20, C++17  | libstdc++         |
-| AppleClang | latest  | C++26-C++17   | libc++            |
+| GCC        | 15-13   | C++26-C++20   | libstdc++         |
+| GCC        | 12-11   | C++23-C++20   | libstdc++         |
+| Clang      | 22-19   | C++26-C++20   | libstdc++, libc++ |
+| Clang      | 18-17   | C++26-C++20   | libc++            |
+| Clang      | 18-17   | C++20         | libstdc++         |
+| AppleClang | latest  | C++26-C++20   | libc++            |
 | MSVC       | latest  | C++23         | MSVC STL          |
 
 ## Development
 
 See the [Contributing Guidelines](CONTRIBUTING.md).
 
-## Integrate beman.exemplar into your project
+## Integrate beman.cycle into your project
 
 ### Build
 
-You can build exemplar using a CMake workflow preset:
+You can build cycle using a CMake workflow preset:
 
 ```bash
 cmake --workflow --preset gcc-release
@@ -172,12 +102,12 @@ To list available workflow presets, you can invoke:
 cmake --list-presets=workflow
 ```
 
-For details on building beman.exemplar without using a CMake preset, refer to the
+For details on building beman.cycle without using a CMake preset, refer to the
 [Contributing Guidelines](CONTRIBUTING.md).
 
 ### Installation
 
-To install beman.exemplar globally after building with the `gcc-release` preset, you can
+To install beman.cycle globally after building with the `gcc-release` preset, you can
 run:
 
 ```bash
@@ -196,47 +126,47 @@ This will generate the following directory structure:
 /opt/beman
 ├── include
 │   └── beman
-│       └── exemplar
-│           ├── exemplar.hpp
+│       └── cycle
+│           ├── cycle.hpp
 │           └── ...
 └── lib
     └── cmake
-        └── beman.exemplar
-            ├── beman.exemplar-config-version.cmake
-            ├── beman.exemplar-config.cmake
-            └── beman.exemplar-targets.cmake
+        └── beman.cycle
+            ├── beman.cycle-config-version.cmake
+            ├── beman.cycle-config.cmake
+            └── beman.cycle-targets.cmake
 ```
 
 ### CMake Configuration
 
-If you installed beman.exemplar to a prefix, you can specify that prefix to your CMake
+If you installed beman.cycle to a prefix, you can specify that prefix to your CMake
 project using `CMAKE_PREFIX_PATH`; for example, `-DCMAKE_PREFIX_PATH=/opt/beman`.
 
-You need to bring in the `beman.exemplar` package to define the `beman::exemplar` CMake
+You need to bring in the `beman.cycle` package to define the `beman::cycle` CMake
 target:
 
 ```cmake
-find_package(beman.exemplar REQUIRED)
+find_package(beman.cycle REQUIRED)
 ```
 
-You will then need to add `beman::exemplar` to the link libraries of any libraries or
-executables that include `beman.exemplar` headers.
+You will then need to add `beman::cycle` to the link libraries of any libraries or
+executables that include `beman.cycle` headers.
 
 ```cmake
-target_link_libraries(yourlib PUBLIC beman::exemplar)
+target_link_libraries(yourlib PUBLIC beman::cycle)
 ```
 
-### Using beman.exemplar
+### Using beman.cycle
 
-To use `beman.exemplar` in your C++ project,
-include an appropriate `beman.exemplar` header from your source code.
+To use `beman.cycle` in your C++ project,
+include an appropriate `beman.cycle` header from your source code.
 
 ```c++
-#include <beman/exemplar/exemplar.hpp>
+#include <beman/cycle/cycle.hpp>
 ```
 
 > [!NOTE]
 >
-> `beman.exemplar` headers are to be included with the `beman/exemplar/` prefix.
+> `beman.cycle` headers are to be included with the `beman/cycle/` prefix.
 > Altering include search paths to spell the include target another way (e.g.
-> `#include <exemplar.hpp>`) is unsupported.
+> `#include <cycle.hpp>`) is unsupported.
