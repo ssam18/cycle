@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 This can be used as a template for those intending to write Beman libraries.
 It may also find use as a minimal and modern  C++ project structure.
 
-**Implements**: `std::todo` proposed in [TODO (P3806R0)](https://wg21.link/P3806R0).
+**Implements**: `std::ranges::views::cycle` proposed in [views::cycle (P3806R0)](https://wg21.link/P3806R0).
 
 **Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#under-development-and-not-yet-ready-for-production-use)
 
@@ -21,7 +21,38 @@ It may also find use as a minimal and modern  C++ project structure.
 
 ## Usage
 
-TODO
+`beman::cycle::views::cycle` is a range adaptor that takes any non-empty
+forward range and yields an infinite view that endlessly repeats the source
+range's elements. Applied to an empty range, it yields an empty view.
+
+```c++
+#include <beman/cycle/cycle.hpp>
+
+#include <ranges>
+#include <vector>
+
+int main() {
+    std::vector v = {1, 2, 3};
+    for (int x : v | beman::cycle::views::cycle | std::views::take(7)) {
+        // 1 2 3 1 2 3 1
+    }
+}
+```
+
+Iterator capabilities track the underlying range:
+
+| Base range                                    | `cycle_view` iterator        |
+|-----------------------------------------------|------------------------------|
+| `forward_range`                               | forward                      |
+| `bidirectional_range` and `common_range`      | bidirectional                |
+| `random_access_range` and `sized_range`       | random access (with `[i]`)   |
+
+Notes consistent with P3806R0:
+
+* `views::cycle(empty_range)` is well-formed and yields an empty view.
+* `end()` returns `std::default_sentinel`; on a non-empty base the view is infinite.
+* `cycle_view` is **not** a borrowed range.
+* `iter_swap` is intentionally not provided (two iterators can alias the same base position).
 
 Full runnable examples can be found in [`examples/`](examples/).
 
