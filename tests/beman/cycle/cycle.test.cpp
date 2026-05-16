@@ -38,9 +38,10 @@ TEST(CycleTest, NonEmptyIsNotEmpty) {
 // ---------- Forward iteration matches the paper's example ----------
 
 TEST(CycleTest, IotaCycleTake10) {
-    auto c   = std::views::iota(0, 3) | cyc::views::cycle | std::views::take(10);
+    auto             c = std::views::iota(0, 3) | cyc::views::cycle | std::views::take(10);
     std::vector<int> got;
-    for (int x : c) got.push_back(x);
+    for (int x : c)
+        got.push_back(x);
     EXPECT_EQ(got, (std::vector<int>{0, 1, 2, 0, 1, 2, 0, 1, 2, 0}));
 }
 
@@ -71,11 +72,11 @@ TEST(CycleTest, PlusEqualNegativeWraps) {
     std::vector<int> v     = {10, 20, 30};
     auto             cycle = v | cyc::views::cycle;
     auto             it    = cycle.begin();
-    it += 10;            // logical index 10 -> v[1] = 20
+    it += 10; // logical index 10 -> v[1] = 20
     EXPECT_EQ(*it, 20);
-    it += -5;            // logical index 5 -> v[2] = 30
+    it += -5; // logical index 5 -> v[2] = 30
     EXPECT_EQ(*it, 30);
-    it += -7;            // logical index -2 -> v[1] = 20 (n_ = -1)
+    it += -7; // logical index -2 -> v[1] = 20 (n_ = -1)
     EXPECT_EQ(*it, 20);
 }
 
@@ -102,15 +103,17 @@ TEST(CycleTest, EndIsDefaultSentinel) {
 
 namespace {
 
-using RAVec      = std::vector<int>;
-using BidirList  = std::list<int>;
-using FwdList    = std::forward_list<int>;
+using RAVec     = std::vector<int>;
+using BidirList = std::list<int>;
+using FwdList   = std::forward_list<int>;
 
 template <class R>
-using CycleIterConcept = typename decltype(std::declval<cyc::cycle_view<std::views::all_t<R&>>&>().begin())::iterator_concept;
+using CycleIterConcept =
+    typename decltype(std::declval<cyc::cycle_view<std::views::all_t<R&>>&>().begin())::iterator_concept;
 
 template <class R>
-using CycleIterCategory = typename decltype(std::declval<cyc::cycle_view<std::views::all_t<R&>>&>().begin())::iterator_category;
+using CycleIterCategory =
+    typename decltype(std::declval<cyc::cycle_view<std::views::all_t<R&>>&>().begin())::iterator_category;
 
 } // namespace
 
@@ -133,10 +136,10 @@ TEST(CycleTest, IteratorCategoriesByBaseCategory) {
 TEST(CycleTest, EqualityRequiresSameLap) {
     std::vector<int> v     = {1, 2, 3};
     auto             cycle = v | cyc::views::cycle;
-    auto             a     = cycle.begin();             // n_=0, *=1
+    auto             a     = cycle.begin();                       // n_=0, *=1
     auto             b     = std::ranges::next(cycle.begin(), 3); // n_=1, *=1
-    EXPECT_EQ(*a, *b);  // same underlying element
-    EXPECT_FALSE(a == b); // but different laps -> not equal
+    EXPECT_EQ(*a, *b);                                            // same underlying element
+    EXPECT_FALSE(a == b);                                         // but different laps -> not equal
     auto c = std::ranges::next(cycle.begin(), 0);
     EXPECT_TRUE(a == c);
 }
@@ -144,11 +147,11 @@ TEST(CycleTest, EqualityRequiresSameLap) {
 // ---------- Bidirectional decrement on non-random-access ----------
 
 TEST(CycleTest, BidirectionalListDecrementWraps) {
-    std::list<int> l = {1, 2, 3};
-    auto           c = l | cyc::views::cycle;
+    std::list<int> l  = {1, 2, 3};
+    auto           c  = l | cyc::views::cycle;
     auto           it = c.begin();
     EXPECT_EQ(*it, 1);
-    --it;             // wrap to last element
+    --it; // wrap to last element
     EXPECT_EQ(*it, 3);
     --it;
     EXPECT_EQ(*it, 2);

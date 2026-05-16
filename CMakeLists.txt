@@ -30,6 +30,7 @@ include(infra/cmake/beman-install-library.cmake)
 
 add_library(beman.cycle INTERFACE)
 add_library(beman::cycle ALIAS beman.cycle)
+target_compile_features(beman.cycle INTERFACE cxx_std_20)
 
 target_sources(
     beman.cycle

@@ -22,13 +22,12 @@ template <bool Const, class T>
 using maybe_const = std::conditional_t<Const, const T, T>;
 
 template <class V>
-concept simple_view = std::ranges::view<V> && std::ranges::range<const V>
-    && std::same_as<std::ranges::iterator_t<V>, std::ranges::iterator_t<const V>>
-    && std::same_as<std::ranges::sentinel_t<V>, std::ranges::sentinel_t<const V>>;
+concept simple_view = std::ranges::view<V> && std::ranges::range<const V> &&
+                      std::same_as<std::ranges::iterator_t<V>, std::ranges::iterator_t<const V>> &&
+                      std::same_as<std::ranges::sentinel_t<V>, std::ranges::sentinel_t<const V>>;
 
 template <class T>
-concept has_arrow = std::input_iterator<T>
-    && (std::is_pointer_v<T> || requires(T t) { t.operator->(); });
+concept has_arrow = std::input_iterator<T> && (std::is_pointer_v<T> || requires(T t) { t.operator->(); });
 
 template <class R>
 concept bidirectional_common = std::ranges::bidirectional_range<R> && std::ranges::common_range<R>;
@@ -113,15 +112,26 @@ class cycle_view<V>::iterator {
     using Parent = detail::maybe_const<Const, cycle_view>;
     using Base   = detail::maybe_const<Const, V>;
 
-    std::ranges::iterator_t<Base>          current_ = std::ranges::iterator_t<Base>();
-    Parent*                                parent_  = nullptr;
-    std::ranges::range_difference_t<Base>  n_       = 0;
+    std::ranges::iterator_t<Base>         current_ = std::ranges::iterator_t<Base>();
+    Parent*                               parent_  = nullptr;
+    std::ranges::range_difference_t<Base> n_       = 0;
 
     friend cycle_view;
     friend class iterator<!Const>;
 
     constexpr iterator(Parent& parent, std::ranges::iterator_t<Base> current)
         : current_(std::move(current)), parent_(std::addressof(parent)) {}
+
+    // Helpers used by hidden-friend operators. They are member functions of
+    // iterator, which is itself a friend of cycle_view, so they can reach
+    // cycle_view::base_. Hidden friends defined inside iterator are not
+    // automatically friends of cycle_view (MSVC enforces this strictly), so
+    // they go through these helpers instead of touching parent_->base_.
+    constexpr bool base_is_empty() const { return std::ranges::empty(parent_->base_); }
+
+    constexpr std::ranges::range_difference_t<Base> base_distance() const {
+        return std::ranges::distance(parent_->base_);
+    }
 
   public:
     using iterator_concept  = decltype(detail::cycle_iterator_concept_t<Base>());
@@ -219,9 +229,7 @@ class cycle_view<V>::iterator {
         return x.n_ == y.n_ && x.current_ == y.current_;
     }
 
-    friend constexpr bool operator==(const iterator& x, std::default_sentinel_t) {
-        return std::ranges::empty(x.parent_->base_);
-    }
+    friend constexpr bool operator==(const iterator& x, std::default_sentinel_t) { return x.base_is_empty(); }
 
     friend constexpr bool operator<(const iterator& x, const iterator& y)
         requires std::ranges::random_access_range<Base>
@@ -251,8 +259,7 @@ class cycle_view<V>::iterator {
     }
 
     friend constexpr auto operator<=>(const iterator& x, const iterator& y)
-        requires std::ranges::random_access_range<Base>
-              && std::three_way_comparable<std::ranges::iterator_t<Base>>
+        requires std::ranges::random_access_range<Base> && std::three_way_comparable<std::ranges::iterator_t<Base>>
     {
         using R = std::compare_three_way_result_t<std::ranges::iterator_t<Base>>;
         if (x.n_ != y.n_) {
@@ -284,15 +291,15 @@ class cycle_view<V>::iterator {
     }
 
     friend constexpr difference_type operator-(const iterator& x, const iterator& y)
-        requires std::sized_sentinel_for<std::ranges::iterator_t<Base>, std::ranges::iterator_t<Base>>
-              && std::ranges::sized_range<Base>
+        requires std::sized_sentinel_for<std::ranges::iterator_t<Base>, std::ranges::iterator_t<Base>> &&
+                 std::ranges::sized_range<Base>
     {
-        const auto dist = static_cast<difference_type>(std::ranges::distance(x.parent_->base_));
+        const auto dist = x.base_distance();
         return (x.n_ - y.n_) * dist + (x.current_ - y.current_);
     }
 
-    friend constexpr std::ranges::range_rvalue_reference_t<Base> iter_move(const iterator& i)
-        noexcept(noexcept(std::ranges::iter_move(i.current_))) {
+    friend constexpr std::ranges::range_rvalue_reference_t<Base>
+    iter_move(const iterator& i) noexcept(noexcept(std::ranges::iter_move(i.current_))) {
         return std::ranges::iter_move(i.current_);
     }
 };
