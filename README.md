@@ -8,8 +8,6 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg) ![Continuous Integration Tests](https://github.com/bemanproject/cycle/actions/workflows/ci_tests.yml/badge.svg) ![Lint Check (pre-commit)](https://github.com/bemanproject/cycle/actions/workflows/pre-commit-check.yml/badge.svg) [![Coverage](https://coveralls.io/repos/github/bemanproject/cycle/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/cycle?branch=main) ![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
 
 `beman.cycle` is a minimal C++ library conforming to [The Beman Standard](https://github.com/bemanproject/beman/blob/main/docs/beman_standard.md).
-This can be used as a template for those intending to write Beman libraries.
-It may also find use as a minimal and modern  C++ project structure.
 
 **Implements**: `std::ranges::views::cycle` proposed in [views::cycle (P3806R0)](https://wg21.link/P3806R0).
 
@@ -62,8 +60,7 @@ Full runnable examples can be found in [`examples/`](examples/).
 
 This project requires at least the following to build:
 
-* A C++ compiler that conforms to the C++20 standard or greater
-  (the implementation relies on concepts and the C++20 ranges library)
+* A C++ compiler that conforms to the C++23 standard or greater
 * CMake 3.30 or later
 * (Test Only) GoogleTest
 
@@ -74,12 +71,11 @@ You can disable building tests by setting CMake option `BEMAN_CYCLE_BUILD_TESTS`
 
 | Compiler   | Version | C++ Standards | Standard Library  |
 |------------|---------|---------------|-------------------|
-| GCC        | 15-13   | C++26-C++20   | libstdc++         |
-| GCC        | 12-11   | C++23-C++20   | libstdc++         |
-| Clang      | 22-19   | C++26-C++20   | libstdc++, libc++ |
-| Clang      | 18-17   | C++26-C++20   | libc++            |
-| Clang      | 18-17   | C++20         | libstdc++         |
-| AppleClang | latest  | C++26-C++20   | libc++            |
+| GCC        | 15-13   | C++26-C++23   | libstdc++         |
+| GCC        | 12      | C++23         | libstdc++         |
+| Clang      | 22-19   | C++26-C++23   | libstdc++, libc++ |
+| Clang      | 18-17   | C++26-C++23   | libc++            |
+| AppleClang | latest  | C++26-C++23   | libc++            |
 | MSVC       | latest  | C++23         | MSVC STL          |
 
 ## Development
