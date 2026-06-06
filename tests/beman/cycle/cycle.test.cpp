@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <beman/cycle/config.hpp>
+#include <gtest/gtest.h>
 #include <beman/cycle/cycle.hpp>
 
-#include <gtest/gtest.h>
-
-#include <forward_list>
-#include <iterator>
-#include <list>
-#include <ranges>
-#include <type_traits>
-#include <vector>
+#if BEMAN_CYCLE_USE_MODULES()
+import std;
+#else
+    #include <forward_list>
+    #include <iterator>
+    #include <list>
+    #include <ranges>
+    #include <type_traits>
+    #include <vector>
+#endif
 
 namespace cyc = beman::cycle;
 

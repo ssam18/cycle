@@ -4,10 +4,15 @@
 // adapted to standard C++23 iostream output instead of std::print so that it
 // compiles on toolchains where <print> is not yet available.
 
+#include <beman/cycle/config.hpp>
 #include <beman/cycle/cycle.hpp>
 
-#include <iostream>
-#include <ranges>
+#if BEMAN_CYCLE_USE_MODULES()
+import std;
+#else
+    #include <iostream>
+    #include <ranges>
+#endif
 
 namespace cyc = beman::cycle;
 

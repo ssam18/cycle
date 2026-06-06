@@ -3,24 +3,34 @@
 #ifndef BEMAN_CYCLE_CYCLE_HPP
 #define BEMAN_CYCLE_CYCLE_HPP
 
-// Implementation of views::cycle as proposed in P3806R0.
-// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3806r0.html
+#include <beman/cycle/config.hpp>
 
-#include <beman/cycle/detail/expo_concept.hpp>
+#if BEMAN_CYCLE_USE_MODULES() && !defined(BEMAN_CYCLE_INCLUDED_FROM_INTERFACE_UNIT)
 
-#include <compare>
-#include <concepts>
-#include <iterator>
-#include <memory>
-#include <ranges>
-#include <type_traits>
-#include <utility>
+import beman.cycle;
+
+#else
+
+    // Implementation of views::cycle as proposed in P3806R0.
+    // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3806r0.html
+
+    #include <beman/cycle/detail/expo_concept.hpp>
+
+    #if !BEMAN_CYCLE_USE_MODULES()
+        #include <compare>
+        #include <concepts>
+        #include <iterator>
+        #include <memory>
+        #include <ranges>
+        #include <type_traits>
+        #include <utility>
+    #endif
 
 namespace beman::cycle {
 
 template <std::ranges::view V>
     requires std::ranges::forward_range<V>
-class cycle_view : public std::ranges::view_interface<cycle_view<V>> {
+class cycle_view : public std::ranges::view_interface<cycle_view<V> > {
   private:
     V base_ = V();
 
@@ -60,7 +70,7 @@ class cycle_view : public std::ranges::view_interface<cycle_view<V>> {
 };
 
 template <class R>
-cycle_view(R&&) -> cycle_view<std::views::all_t<R>>;
+cycle_view(R&&) -> cycle_view<std::views::all_t<R> >;
 
 template <std::ranges::view V>
     requires std::ranges::forward_range<V>
@@ -98,11 +108,11 @@ class cycle_view<V>::iterator {
     using difference_type   = std::ranges::range_difference_t<Base>;
 
     iterator()
-        requires std::default_initializable<std::ranges::iterator_t<Base>>
+        requires std::default_initializable<std::ranges::iterator_t<Base> >
     = default;
 
     constexpr iterator(iterator<!Const> i)
-        requires Const && std::convertible_to<std::ranges::iterator_t<V>, std::ranges::iterator_t<Base>>
+        requires Const && std::convertible_to<std::ranges::iterator_t<V>, std::ranges::iterator_t<Base> >
         : current_(std::move(i.current_)), parent_(i.parent_), n_(i.n_) {}
 
     constexpr std::ranges::iterator_t<Base> base() const { return current_; }
@@ -110,7 +120,7 @@ class cycle_view<V>::iterator {
     constexpr decltype(auto) operator*() const { return *current_; }
 
     constexpr std::ranges::iterator_t<Base> operator->() const
-        requires detail::has_arrow<std::ranges::iterator_t<Base>>
+        requires detail::has_arrow<std::ranges::iterator_t<Base> >
     {
         return current_;
     }
@@ -217,9 +227,9 @@ class cycle_view<V>::iterator {
     }
 
     friend constexpr auto operator<=>(const iterator& x, const iterator& y)
-        requires std::ranges::random_access_range<Base> && std::three_way_comparable<std::ranges::iterator_t<Base>>
+        requires std::ranges::random_access_range<Base> && std::three_way_comparable<std::ranges::iterator_t<Base> >
     {
-        using R = std::compare_three_way_result_t<std::ranges::iterator_t<Base>>;
+        using R = std::compare_three_way_result_t<std::ranges::iterator_t<Base> >;
         if (x.n_ != y.n_) {
             return R(x.n_ <=> y.n_);
         }
@@ -249,7 +259,7 @@ class cycle_view<V>::iterator {
     }
 
     friend constexpr difference_type operator-(const iterator& x, const iterator& y)
-        requires std::sized_sentinel_for<std::ranges::iterator_t<Base>, std::ranges::iterator_t<Base>> &&
+        requires std::sized_sentinel_for<std::ranges::iterator_t<Base>, std::ranges::iterator_t<Base> > &&
                  std::ranges::sized_range<Base>
     {
         const auto dist = x.base_distance();
@@ -268,7 +278,7 @@ struct cycle_fn {
     template <std::ranges::viewable_range R>
         requires std::ranges::forward_range<R>
     constexpr auto operator()(R&& r) const {
-        return cycle_view<std::views::all_t<R>>(std::views::all(std::forward<R>(r)));
+        return cycle_view<std::views::all_t<R> >(std::views::all(std::forward<R>(r)));
     }
 
     template <std::ranges::viewable_range R>
@@ -287,5 +297,8 @@ inline constexpr detail::cycle_fn cycle{};
 } // namespace views
 
 } // namespace beman::cycle
+
+#endif // BEMAN_CYCLE_USE_MODULES() &&
+       // !defined(BEMAN_CYCLE_INCLUDED_FROM_INTERFACE_UNIT)
 
 #endif // BEMAN_CYCLE_CYCLE_HPP
