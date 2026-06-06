@@ -75,7 +75,10 @@ else()
 endif()
 
 if(BEMAN_CYCLE_USE_MODULES)
-    set_target_properties(beman.cycle PROPERTIES VERIFY_INTERFACE_HEADER_SETS OFF)
+    set_target_properties(
+        beman.cycle
+        PROPERTIES VERIFY_INTERFACE_HEADER_SETS OFF
+    )
 else()
     set_target_properties(
         beman.cycle
