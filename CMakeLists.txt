@@ -52,6 +52,7 @@ add_library(beman::cycle ALIAS beman.cycle)
 
 if(BEMAN_CYCLE_USE_MODULES)
     target_compile_features(beman.cycle PUBLIC cxx_std_23)
+    set_target_properties(beman.cycle PROPERTIES CXX_MODULE_STD ON)
     target_sources(
         beman.cycle
         PUBLIC
