@@ -74,10 +74,14 @@ else()
     )
 endif()
 
-set_target_properties(
-    beman.cycle
-    PROPERTIES VERIFY_INTERFACE_HEADER_SETS ${PROJECT_IS_TOP_LEVEL}
-)
+if(BEMAN_CYCLE_USE_MODULES)
+    set_target_properties(beman.cycle PROPERTIES VERIFY_INTERFACE_HEADER_SETS OFF)
+else()
+    set_target_properties(
+        beman.cycle
+        PROPERTIES VERIFY_INTERFACE_HEADER_SETS ${PROJECT_IS_TOP_LEVEL}
+    )
+endif()
 
 add_subdirectory(include/beman/cycle)
 
