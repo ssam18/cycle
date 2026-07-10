@@ -44,8 +44,9 @@ TEST(CycleTest, NonEmptyIsNotEmpty) {
 TEST(CycleTest, IotaCycleTake10) {
     auto             c = std::views::iota(0, 3) | cyc::views::cycle | std::views::take(10);
     std::vector<int> got;
-    for (int x : c)
+    for (int x : c) {
         got.push_back(x);
+    }
     EXPECT_EQ(got, (std::vector<int>{0, 1, 2, 0, 1, 2, 0, 1, 2, 0}));
 }
 
@@ -112,12 +113,10 @@ using BidirList = std::list<int>;
 using FwdList   = std::forward_list<int>;
 
 template <class R>
-using CycleIterConcept =
-    typename decltype(std::declval<cyc::cycle_view<std::views::all_t<R&>>&>().begin())::iterator_concept;
+using CycleIterConcept = decltype(std::declval<cyc::cycle_view<std::views::all_t<R&>>&>().begin())::iterator_concept;
 
 template <class R>
-using CycleIterCategory =
-    typename decltype(std::declval<cyc::cycle_view<std::views::all_t<R&>>&>().begin())::iterator_category;
+using CycleIterCategory = decltype(std::declval<cyc::cycle_view<std::views::all_t<R&>>&>().begin())::iterator_category;
 
 } // namespace
 
@@ -173,8 +172,8 @@ TEST(CycleTest, NotBorrowedRange) {
 
 TEST(CycleTest, IsForwardRange) {
     std::vector<int> v = {1, 2, 3};
-    auto             c = v | cyc::views::cycle;
-    static_assert(std::ranges::forward_range<decltype(c)>);
-    static_assert(std::ranges::random_access_range<decltype(c)>); // because v is RA + sized
+    using C            = decltype(v | cyc::views::cycle);
+    static_assert(std::ranges::forward_range<C>);
+    static_assert(std::ranges::random_access_range<C>); // because v is RA + sized
     SUCCEED();
 }
